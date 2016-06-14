@@ -203,15 +203,13 @@ void MATRIX_clean (MAT* A)
  *--------------------------------------------------------------------------*/
 void MATRIX_matvec(MAT* A, double* x, double* b) {
     double* AA = A->AA;
-    double* IA = A->IA;
-    double* JA = A->JA;
+    int* IA = A->IA;
+    int* JA = A->JA;
     
-    int i, n = A->n;
-    // b = (double*) calloc(n, sizeof(double));
-    
+    int i, j, n = A->n;
     for(i = 0; i < n; i++) {
-        b[i] = 0
-        for(j = IA[i]; j < IA[i+1]) {
+        b[i] = 0.0;
+        for(j = IA[i]; j < IA[i+1]; j++) {
             b[i] += AA[j] * x[JA[j]];
         }
     }
