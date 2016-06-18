@@ -25,6 +25,41 @@ int main (int argc, char* argv[])
 	MAT *A = (MAT*) malloc (sizeof(MAT));						
 	MATRIX_readCSR (A,argv[1]);
 	
+	// Cálculo do vetor independente
+	int n = A->n; // número de incógnitas que o sistema terá
+	double* x = (double*) calloc(n, sizeof(double));
+	
+	int i;
+	for(i = 0; i < n; i++)
+	    x[i] = 1.0;
+	
+	double* b = (double*) calloc(n, sizeof(double));
+	MATRIX_matvec(A, x, b);
+	
+	/*---------------------------------------------*/
+	/*---COMO USAR O REORDENAMENTO RCM-------------*/
+	/*---------------------------------------------*/
+	int *p;									// Vetor de permutação
+	int  bandwidth;
+	
+	bandwidth = (int) MATRIX_bandwidth(A);					// Calcula Largura de Banda da matriz original
+	printf("\n  [ REORDENANDO com RCM ]\n");
+	printf("  - Largura de Banda inicial : %d\n", bandwidth);
+	
+	/*---START TIME---------------> */ time = get_time(); 
+	REORDERING_RCM_opt(A,&p);						// Aplica o reordenamento RCM na matriz A
+	MATRIX_permutation(A,p); 						// Aplica a permutação em A para trocar linhas e colunas
+	/*---FINAL TIME---------------> */ time = (get_time() - time)/100.0;
+	
+	bandwidth = (int) MATRIX_bandwidth(A);					// Calcula Largura de Banda da matriz reordenada
+	printf("  - Largura de Banda final   : %d\n", bandwidth);
+	printf("  - Tempo total              : %.6f sec\n\n", time);
+	
+	// Reordenando o vetor independente
+	double* b_permutado = calloc(n,sizeof(double));		
+    for (i = 0; i < n; ++i) 
+	    b_permutado[i] = b[p[i]];
+	    
 	/*---------------------------------------------*/
 	/*---COMO USAR O ALGORITMO ILUP----------------*/
 	/*---------------------------------------------*/
@@ -47,27 +82,14 @@ int main (int argc, char* argv[])
 	
 	/* L contém a parte estritamente inferior de M / L->D contém a diagonal = 1.0 */
 	/* U contém a parte estritamente superior de M / U->D contém a diagonal       */
-	MATRIX_printLU (A,L,U);	
+	MATRIX_printLU (A,L,U);
 	
-	/*---------------------------------------------*/
-	/*---COMO USAR O REORDENAMENTO RCM-------------*/
-	/*---------------------------------------------*/
-	int *p;									// Vetor de permutação
-	int  bandwidth;
+	double tol = 1e-8; // tolerância
+	int kmax = 500; // número máximo de iterações
+	int lmax = 20; // número máximo de vetores de Krylov
 	
-	bandwidth = (int) MATRIX_bandwidth(A);					// Calcula Largura de Banda da matriz original
-	printf("\n  [ REORDENANDO com RCM ]\n");
-	printf("  - Largura de Banda inicial : %d\n", bandwidth);
-	
-	/*---START TIME---------------> */ time = get_time(); 
-	REORDERING_RCM_opt(A,&p);						// Aplica o reordenamento RCM na matriz A
-	MATRIX_permutation(A,p); 						// Aplica a permutação em A para trocar linhas e colunas
-	/*---FINAL TIME---------------> */ time = (get_time() - time)/100.0;
-	
-	bandwidth = (int) MATRIX_bandwidth(A);					// Calcula Largura de Banda da matriz reordenada
-	printf("  - Largura de Banda final   : %d\n", bandwidth);
-	printf("  - Tempo total              : %.6f sec\n\n", time);
-	
+	x = GMRES (A,b_permutado, tol, kmax, lmax);
+	x_permutado[p[i]] = x[i];
 
 	free(p);
 	MATRIX_clean(A);
@@ -75,3 +97,4 @@ int main (int argc, char* argv[])
 	MATRIX_clean(U);
 	return 0;
 }
+
