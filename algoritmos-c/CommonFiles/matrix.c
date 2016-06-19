@@ -215,4 +215,53 @@ void MATRIX_matvec(MAT* A, double* x, double* b) {
     }
 }
 
+void MATRIX_forward(MAT* L, double* b, double* y) {
+    double* AA = L->AA;
+    int* IA = L->IA;
+    int* JA = L->JA;
+    int n = L->n;
+    
+    printf("L->nz = %d\n", L->nz);
+    
+    int i, j, first, last, column;
+    double sum;
+    
+    y[0] = b[0]/AA[0];
+    for(i = 0; i < n; i++) {
+        first = IA[i];        // primeiro elemento não-nulo da linha i
+        last = IA[i+1] - 1;   // último elemento não-nulo da linha i
+        
+        sum = 0.0;
+        for(j = first; j < last; j++) {
+            column = JA[j];
+            sum += y[column] * AA[j];
+        }
+        printf("i = %d, last = %d, first = %d\n", i, last, first);
+        y[i] = (b[i] - sum)/AA[last];
+    }
+}
+
+void MATRIX_backward(MAT* U, double* y, double* x) {
+    double* AA = U->AA;
+    int* IA = U->IA;
+    int* JA = U->JA;
+    int n = U->n;
+    int nz = U->nz;
+    
+    int i, j, first, last, column;
+    double sum;
+    
+    x[n-1] = y[n-1]/AA[nz-1];
+    for(i = n-1; i >= 0; i--) {
+        first = IA[i];        // primeiro elemento não-nulo da linha i
+        last = IA[i+1] - 1;   // último elemento não-nulo da linha i
+        
+        sum = 0.0;
+        for(j = last; j > first; j--) {
+            column = JA[j];
+            sum += x[column] * AA[j];
+        }
+        x[i] = (y[i] - sum)/AA[first];
+    }
+}
 

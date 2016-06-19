@@ -28,13 +28,23 @@ int main (int argc, char* argv[])
 	// Cálculo do vetor independente
 	int n = A->n; // número de incógnitas que o sistema terá
 	double* x = (double*) calloc(n, sizeof(double));
+	double* x_permutado = (double*) calloc(n, sizeof(double));
+	double* sol = (double*) calloc(n, sizeof(double));
 	
 	int i;
 	for(i = 0; i < n; i++)
-	    x[i] = 1.0;
+	    sol[i] = (double) ((3*i)%5) + 1.0;
+	/* for(i = 0; i < n; i++)
+	    sol[i] = (double) i + 1.0; */
+	for(i = 0; i < n; i++)
+	    x[i] = 3.0;
 	
 	double* b = (double*) calloc(n, sizeof(double));
-	MATRIX_matvec(A, x, b);
+	MATRIX_matvec(A, sol, b);
+	
+	/* printf("Vetor independente:\n");
+	for(i = 0; i < n; i++)
+	    printf("%lf\n", b[i]); */
 	
 	/*---------------------------------------------*/
 	/*---COMO USAR O REORDENAMENTO RCM-------------*/
@@ -82,16 +92,40 @@ int main (int argc, char* argv[])
 	
 	/* L contém a parte estritamente inferior de M / L->D contém a diagonal = 1.0 */
 	/* U contém a parte estritamente superior de M / U->D contém a diagonal       */
-	MATRIX_printLU (A,L,U);
+	// MATRIX_printLU (A,L,U);
 	
 	double tol = 1e-8; // tolerância
-	int kmax = 500; // número máximo de iterações
-	int lmax = 20; // número máximo de vetores de Krylov
+	int kmax = 50; // número de vetores na base de Krylov
+	int lmax = 1000; // número máximo de reinicializações
 	
-	x = GMRES (A,b_permutado, tol, kmax, lmax);
-	x_permutado[p[i]] = x[i];
+	/* printf("O vetor x era:\n");
+	for(i = 0; i < n; i++)
+	    printf("%lf\n", x[i]); */
+	    
+	// GMRES (A, b_permutado, x, tol, kmax, lmax);
+	GMRES_pc(A, L, U, b_permutado, x, tol, kmax, lmax);
+	
+	/* printf("Vetor de permutação:\n");
+	for(i = 0; i < n; i++)
+	    printf("%d\n", p[i]); */
+	
+	// printf("OK!\n");
+	for(i = 0; i < n; i++)
+    	x_permutado[p[i]] = x[i];
+	
+	printf("A solução do sistema linear é:\n");
+	for(i = 0; i < n; i++)
+	    printf("%lf\n", x_permutado[i]);
 
 	free(p);
+	
+	free(x);
+	free(x_permutado);
+	free(sol);
+	
+	free(b);
+	free(b_permutado);
+	
 	MATRIX_clean(A);
 	MATRIX_clean(L);
 	MATRIX_clean(U);

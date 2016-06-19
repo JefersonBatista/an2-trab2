@@ -71,3 +71,13 @@ extern void     ILUT                     (SparMAT* csmat, SparILU* lu, int lfil,
  *--------------------------------------------------------------------------*/
 extern void     REORDERING_RCM_opt       (MAT* A, int** p);
 extern void     REORDERING_RCM           (MAT* A, int** p);
+
+/*----------------------------------------------------------------------------
+ * GMRES ALGORITHM PROTOTYPE
+ *--------------------------------------------------------------------------*/
+extern void subtrair(double *uc, double beta, double *u, int tamU);
+extern double norm(double *v, int tamV);
+extern double produto_interno(double *v1, double *v2, int k);
+extern void GMRES(MAT *A, double *b, double *x, double tol, int kmax, int lmax);
+extern void GMRES_pc(MAT *A, MAT *L, MAT *U, double *b, double *x, double tol, int kmax, int lmax);
+
