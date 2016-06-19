@@ -25,36 +25,33 @@ int main (int argc, char* argv[])
 	MAT *A = (MAT*) malloc (sizeof(MAT));						
 	MATRIX_readCSR (A,argv[1]);
 	
-	// Cálculo do vetor independente
 	int n = A->n; // número de incógnitas que o sistema terá
 	double* x = (double*) calloc(n, sizeof(double));
 	double* x_permutado = (double*) calloc(n, sizeof(double));
 	double* sol = (double*) calloc(n, sizeof(double));
 	
 	int i;
-	for(i = 0; i < n; i++)
-	    sol[i] = (double) ((3*i)%5) + 1.0;
-	/* for(i = 0; i < n; i++)
-	    sol[i] = (double) i + 1.0; */
-	for(i = 0; i < n; i++)
-	    x[i] = 3.0;
 	
+	// Definindo a solução do sistema
+	for(i = 0; i < n; i++)
+	    sol[i] = 1.0;
+	
+	// Cálculo do vetor independente
 	double* b = (double*) calloc(n, sizeof(double));
 	MATRIX_matvec(A, sol, b);
-	
-	/* printf("Vetor independente:\n");
-	for(i = 0; i < n; i++)
-	    printf("%lf\n", b[i]); */
 	
 	/*---------------------------------------------*/
 	/*---COMO USAR O REORDENAMENTO RCM-------------*/
 	/*---------------------------------------------*/
 	int *p;									// Vetor de permutação
 	int  bandwidth;
+	int  envelope;
 	
 	bandwidth = (int) MATRIX_bandwidth(A);					// Calcula Largura de Banda da matriz original
+	envelope = (int) MATRIX_envelope(A);					// Calcula Envelope da matriz original
 	printf("\n  [ REORDENANDO com RCM ]\n");
 	printf("  - Largura de Banda inicial : %d\n", bandwidth);
+	printf("  - Envelope inicial : %d\n\n", envelope);
 	
 	/*---START TIME---------------> */ time = get_time(); 
 	REORDERING_RCM_opt(A,&p);						// Aplica o reordenamento RCM na matriz A
@@ -62,7 +59,9 @@ int main (int argc, char* argv[])
 	/*---FINAL TIME---------------> */ time = (get_time() - time)/100.0;
 	
 	bandwidth = (int) MATRIX_bandwidth(A);					// Calcula Largura de Banda da matriz reordenada
+	envelope = (int) MATRIX_envelope(A);					// Calcula Envelope da matriz reordenada
 	printf("  - Largura de Banda final   : %d\n", bandwidth);
+	printf("  - Envelope final   : %d\n\n", envelope);
 	printf("  - Tempo total              : %.6f sec\n\n", time);
 	
 	// Reordenando o vetor independente
@@ -85,37 +84,28 @@ int main (int argc, char* argv[])
 	ILUP          (mat,lu,2);							// Algoritmo ILU(p)
 	SPARILU_toCSR (lu,L,U);								// Convertendo estrutura especial para CSR
 	/*---FINAL TIME---------------> */ time = (get_time() - time)/100.0;
-	printf("  - Tempo total              : %.6f sec\n", time);
+	printf("  - Tempo total              : %.6f sec\n\n", time);
 	
-	SPARILU_clean (lu);								// Liberando memória da estrutura lu
+	SPARILU_clean (lu);								    // Liberando memória da estrutura lu
 	SPARMAT_clean (mat);								// Liberando memória da estrutura mat
 	
 	/* L contém a parte estritamente inferior de M / L->D contém a diagonal = 1.0 */
 	/* U contém a parte estritamente superior de M / U->D contém a diagonal       */
 	// MATRIX_printLU (A,L,U);
-	
+    
 	double tol = 1e-8; // tolerância
 	int kmax = 50; // número de vetores na base de Krylov
 	int lmax = 1000; // número máximo de reinicializações
-	
-	/* printf("O vetor x era:\n");
-	for(i = 0; i < n; i++)
-	    printf("%lf\n", x[i]); */
 	    
 	// GMRES (A, b_permutado, x, tol, kmax, lmax);
 	GMRES_pc(A, L, U, b_permutado, x, tol, kmax, lmax);
 	
-	/* printf("Vetor de permutação:\n");
-	for(i = 0; i < n; i++)
-	    printf("%d\n", p[i]); */
-	
-	// printf("OK!\n");
 	for(i = 0; i < n; i++)
     	x_permutado[p[i]] = x[i];
 	
-	printf("A solução do sistema linear é:\n");
+	/* printf("A solução do sistema linear é:\n");
 	for(i = 0; i < n; i++)
-	    printf("%lf\n", x_permutado[i]);
+	    printf("%lf\n", x_permutado[i]); */
 
 	free(p);
 	

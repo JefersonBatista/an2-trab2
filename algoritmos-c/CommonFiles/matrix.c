@@ -78,18 +78,36 @@ void MATRIX_readCSR (MAT* A, char* p)
 }
 
 /*----------------------------------------------------------------------------
+ * Compute the matrix envelope
+ *--------------------------------------------------------------------------*/
+long int MATRIX_envelope (MAT* A)
+{
+	int i, width;
+	int n = A->n;
+	unsigned long int envelope = 0;
+	
+	for (i = 0; i < n; i++)
+	{
+		width = (i - A->JA[A->IA[i]]);
+		envelope += width; 
+	}
+	
+	return envelope;
+}
+
+/*----------------------------------------------------------------------------
  * Compute the matrix bandwidth
  *--------------------------------------------------------------------------*/
 long int MATRIX_bandwidth (MAT* A)
 {
-	int i, min;
+	int i, width;
 	int n = A->n;
-	unsigned long int bandwidth=0;
+	unsigned long int bandwidth = 0;
 	
-	for (i = 0; i < n; ++i)
+	for (i = 0; i < n; i++)
 	{
-		min = (i - A->JA[A->IA[i]]);
-		if (bandwidth < min) bandwidth = min; 
+		width = (i - A->JA[A->IA[i]]);
+		if (bandwidth < width) bandwidth = width; 
 	}
 	
 	return bandwidth;
@@ -219,25 +237,24 @@ void MATRIX_forward(MAT* L, double* b, double* y) {
     double* AA = L->AA;
     int* IA = L->IA;
     int* JA = L->JA;
-    int n = L->n;
+    double* D = L->D;
     
-    printf("L->nz = %d\n", L->nz);
+    int n = L->n;
     
     int i, j, first, last, column;
     double sum;
     
-    y[0] = b[0]/AA[0];
-    for(i = 0; i < n; i++) {
+    y[0] = b[0]/D[0];
+    for(i = 1; i < n; i++) {
         first = IA[i];        // primeiro elemento não-nulo da linha i
         last = IA[i+1] - 1;   // último elemento não-nulo da linha i
         
         sum = 0.0;
-        for(j = first; j < last; j++) {
+        for(j = first; j <= last; j++) {
             column = JA[j];
             sum += y[column] * AA[j];
         }
-        printf("i = %d, last = %d, first = %d\n", i, last, first);
-        y[i] = (b[i] - sum)/AA[last];
+        y[i] = (b[i] - sum)/D[i];
     }
 }
 
@@ -245,23 +262,24 @@ void MATRIX_backward(MAT* U, double* y, double* x) {
     double* AA = U->AA;
     int* IA = U->IA;
     int* JA = U->JA;
+    double* D = U->D;
+    
     int n = U->n;
-    int nz = U->nz;
     
     int i, j, first, last, column;
     double sum;
     
-    x[n-1] = y[n-1]/AA[nz-1];
-    for(i = n-1; i >= 0; i--) {
+    x[n-1] = y[n-1]/D[n-1];
+    for(i = n-2; i >= 0; i--) {
         first = IA[i];        // primeiro elemento não-nulo da linha i
         last = IA[i+1] - 1;   // último elemento não-nulo da linha i
         
         sum = 0.0;
-        for(j = last; j > first; j--) {
+        for(j = last; j >= first; j--) {
             column = JA[j];
             sum += x[column] * AA[j];
         }
-        x[i] = (y[i] - sum)/AA[first];
+        x[i] = (y[i] - sum)/D[i];
     }
 }
 

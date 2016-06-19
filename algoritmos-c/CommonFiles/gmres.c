@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include "gmres.h"
+#include "protos.h"
 
 void subtrair(double *uc, double beta, double *u,int tamU) {
 	int i = 0;
