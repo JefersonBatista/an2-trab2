@@ -29,6 +29,7 @@ int main (int argc, char* argv[])
 	double* x = (double*) calloc(n, sizeof(double));
 	double* x_permutado = (double*) calloc(n, sizeof(double));
 	double* sol = (double*) calloc(n, sizeof(double));
+	double* erro = (double*) calloc(n, sizeof(double));
 	
 	int i;
 	
@@ -100,21 +101,31 @@ int main (int argc, char* argv[])
 	// GMRES (A, b_permutado, x, tol, kmax, lmax);
 	GMRES_pc(A, L, U, b_permutado, x, tol, kmax, lmax);
 	
-	for(i = 0; i < n; i++)
+	for(i = 0; i < n; i++) {
     	x_permutado[p[i]] = x[i];
-	
-	/* printf("A solução do sistema linear é:\n");
+    	erro[p[i]] = x[i];
+    }
+    
+    // Sem reordenamento
+    /* for(i = 0; i < n; i++)
+        erro[i] = x[i]; */
+    	
+    /* printf("A solução do sistema linear é:\n");
 	for(i = 0; i < n; i++)
 	    printf("%lf\n", x_permutado[i]); */
+    	
+    subtrair(erro, 1, sol, n);
+    printf("\n\nNorma do erro: %lf\n", norm(erro, n));
 
 	free(p);
 	
 	free(x);
 	free(x_permutado);
 	free(sol);
+	free(erro);
 	
 	free(b);
-	free(b_permutado);
+	// free(b_permutado);
 	
 	MATRIX_clean(A);
 	MATRIX_clean(L);

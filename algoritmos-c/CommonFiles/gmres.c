@@ -129,6 +129,7 @@ void GMRES(MAT *A, double *b, double *x, double tol, int kmax, int lmax) {
 			rol = fabs(ebar[i+1]);
 
 			i++;
+			printf("ciclo: %d, iter: %d, rol: %lf\n", iter, i, rol);			
 		}
 			/*----------------------------
 			 * Fim da iteração do GMRES
@@ -169,7 +170,7 @@ void GMRES(MAT *A, double *b, double *x, double tol, int kmax, int lmax) {
 	free(u);
 	free(H);
 
-	printf("(GMRES) Ciclo %d: iteracao = %d\n", l, iter);
+	printf("(GMRES) Ciclo %d: iteracao = %d\n", iter, l);
 
 	// return x;
 }
@@ -267,6 +268,7 @@ void GMRES_pc(MAT *A, MAT *L, MAT *U, double *b, double *x, double tol, int kmax
 			rol = fabs(ebar[i+1]);
 
 			i++;
+			printf("ciclo: %d, iter: %d, rol: %lf\n", iter, i, rol);
 		}
 			/*----------------------------
 			 * Fim da iteração do GMRES
@@ -309,7 +311,7 @@ void GMRES_pc(MAT *A, MAT *L, MAT *U, double *b, double *x, double tol, int kmax
 	free(u);
 	free(H);
 
-	printf("(GMRES) Ciclo %d: iteracao = %d\n", l, iter);
+	printf("(GMRES) Ciclo %d: iteracao = %d\n", iter, l);
 
 	// return x;
 }
